@@ -1,0 +1,132 @@
+
+
+```{r}
+
+library(keras)
+imdb <- dataset_imdb(num_words = 10000)
+c(c(train_data, train_labels), c(test_data, test_labels)) %<-% imdb
+
+
+
+
+vectorize_sequences <- function(sequences, dimension = 10000) {
+  results <- matrix(0, nrow = length(sequences), ncol = dimension)
+  for (i in 1:length(sequences))
+    results[i, sequences[[i]]] <- 1
+  results
+}
+
+x_train <- vectorize_sequences(train_data)
+x_test <- vectorize_sequences(test_data)
+
+y_train <- as.numeric(train_labels)
+y_test <- as.numeric(test_labels)
+
+
+model <- keras_model_sequential() %>% 
+  layer_dense(units = 64, activation = "tanh", input_shape = c(10000)) %>% 
+  layer_dense(units = 32, activation = "tanh") %>%
+  layer_dense(units = 32, activation = "tanh") %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+
+```
+
+
+
+
+```{r}
+
+# Regularization
+
+model <- keras_model_sequential() %>%
+layer_dense(units = 64, kernel_regularizer = regularizer_l2(0.001),
+activation = "tanh", input_shape = c(10000)) %>%
+layer_dense(units = 32, kernel_regularizer = regularizer_l2(0.001),
+activation = "tanh") %>%
+layer_dense(units = 32, kernel_regularizer = regularizer_l2(0.001),
+activation = "tanh") %>%
+layer_dense(units = 1, activation = "sigmoid")
+
+regularizer_l1(0.001)
+regularizer_l1_l2(l1 = 0.001, l2 = 0.001)
+
+
+
+model %>% compile(
+  optimizer = "rmsprop",
+  loss = "mse",
+  metrics = c("accuracy")
+)
+
+
+val_indices <- 1:1000
+x_val <- x_train[val_indices,]
+partial_x_train <- x_train[-val_indices,]
+
+y_val <- y_train[val_indices]
+partial_y_train = y_train[-val_indices]
+
+history <- model %>% fit(
+  partial_x_train,
+  partial_y_train,
+  epochs = 20,
+  batch_size = 512,
+  validation_data = list(x_val, y_val)
+)
+
+
+plot(history)
+
+
+model <- keras_model_sequential() %>% 
+  layer_dense(units = 64, activation = "tanh", input_shape = c(10000)) %>% 
+  layer_dense(units = 32, activation = "tanh") %>% 
+  layer_dense(units = 32, activation = "tanh") %>% 
+  layer_dense(units = 1, activation = "sigmoid")
+model %>% compile(
+  optimizer = "rmsprop",
+  loss = "mse",
+  metrics = c("accuracy")
+)
+model %>% fit(x_train, y_train, epochs = 4, batch_size = 512)
+results <- model %>% evaluate(x_test, y_test)
+
+
+results
+
+
+```
+
+
+
+
+
+```{r}
+
+# Dropout
+
+model <- keras_model_sequential() %>%
+layer_dense(units = 64, activation = "tanh", input_shape = c(10000)) %>%
+layer_dropout(rate = 0.5) %>%
+layer_dense(units = 32, activation = "tanh") %>%
+layer_dropout(rate = 0.5) %>%
+layer_dense(units = 32, activation = "tanh") %>%
+layer_dropout(rate = 0.5) %>%  
+layer_dense(units = 1, activation = "sigmoid")
+
+plot(history)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
